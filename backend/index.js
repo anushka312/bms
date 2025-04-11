@@ -8,7 +8,7 @@ app.use(cors());
 app.use(express.json()); //It lets you read req.body as a JavaScript object when a client sends JSON
 
 // ROUTES
-const customerRoutes = require('./routes/customers');
+const customerRoutes = require('./routes/customer');
 app.use('/customers', customerRoutes);
 
 const accountRoutes = require('./routes/account');
@@ -20,7 +20,7 @@ app.use('/borrower', borrowerRoutes);
 const branchRoutes = require('./routes/branch');
 app.use('/branch', branchRoutes);
 
-const custBankerRoutes = require('./routes/custBanker');
+const custBankerRoutes = require('./routes/custbanker');
 app.use('/custbanker', custBankerRoutes);
 
 const dependentRoutes = require('./routes/dependent');

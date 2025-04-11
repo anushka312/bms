@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const db = require('../db');
 
-// /customers/:id/accounts - All accounts for a customer
+// All accounts for a customer
 router.get('/customers/:id/accounts', async (req, res) => {
   try {
     const result = await db.query(
@@ -13,11 +13,11 @@ router.get('/customers/:id/accounts', async (req, res) => {
     );
     res.json(result.rows);
   } catch (err) {
-    res.status(500).send(err.message);
+    res.status(500).json({ message: err.message });
   }
 });
 
-// /customers/:id/loans - All loans for a customer
+// All loans for a customer
 router.get('/customers/:id/loans', async (req, res) => {
   try {
     const result = await db.query(
@@ -28,11 +28,11 @@ router.get('/customers/:id/loans', async (req, res) => {
     );
     res.json(result.rows);
   } catch (err) {
-    res.status(500).send(err.message);
+    res.status(500).json({ message: err.message });
   }
 });
 
-// /branches/:name/accounts - Accounts at a branch
+// Accounts at a specific branch
 router.get('/branches/:name/accounts', async (req, res) => {
   try {
     const result = await db.query(
@@ -43,11 +43,11 @@ router.get('/branches/:name/accounts', async (req, res) => {
     );
     res.json(result.rows);
   } catch (err) {
-    res.status(500).send(err.message);
+    res.status(500).json({ message: err.message });
   }
 });
 
-// /employees/:id/customers - Customers handled by an employee
+// Customers handled by an employee
 router.get('/employees/:id/customers', async (req, res) => {
   try {
     const result = await db.query(
@@ -58,11 +58,11 @@ router.get('/employees/:id/customers', async (req, res) => {
     );
     res.json(result.rows);
   } catch (err) {
-    res.status(500).send(err.message);
+    res.status(500).json({ message: err.message });
   }
 });
 
-// /loans/:id/payments - Payments made for a loan
+// Payments made for a loan
 router.get('/loans/:id/payments', async (req, res) => {
   try {
     const result = await db.query(
@@ -71,7 +71,7 @@ router.get('/loans/:id/payments', async (req, res) => {
     );
     res.json(result.rows);
   } catch (err) {
-    res.status(500).send(err.message);
+    res.status(500).json({ message: err.message });
   }
 });
 

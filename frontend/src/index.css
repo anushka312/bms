@@ -1,3 +1,26 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+html, body {
+    overflow-x: hidden;
+  }
+@font-face {
+    font-family: 'Visby';
+    src: url('./assets/fonts/visby/VisbyRegular.otf') format('opentype');
+    font-weight: normal;
+    font-style: normal;
+  }
+  
+
+@font-face {
+    font-family: 'Visby';
+    src: url('./assets/fonts/Visby/VisbyBold Italic.otf.ttf') format('opentype');
+    font-weight: bold;
+    font-style: normal;
+  }
+  
+  body {
+    font-family: 'Visby', sans-serif;
+  }
+  

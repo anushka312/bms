@@ -1,11 +1,43 @@
-import React from 'react';
+import React, { useState } from 'react';
 import bg from '/src/assets/bg.jpg';
-import loginImage from '/src/assets/login-image-2.jpg'; 
+import loginImage from '/src/assets/login-image-2.jpg';
+import { useNavigate } from 'react-router-dom';
 
 const AdminLogin = () => {
+  const navigate = useNavigate();
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const handleSubmit = async (e) => {
+      e.preventDefault(); // prevent page reload
+    
+      try {
+        const response = await fetch('http://localhost:5000/employee/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ email, password }),
+        });
+    
+        const data = await response.json();
+    
+        if (response.ok) {
+          alert('Login successful');
+          console.log('User:', data);
+          navigate('/ahome');
+  
+        } else {
+          alert(data.message || 'Login failed');
+        }
+      } catch (error) {
+        console.error('Login error:', error);
+        alert('Server error');
+      }
+    };
+
   return (
     <div
-      className="bg-cover bg-center w-screen h-screen flex items-center justify-center"
+      className="bg-cover bg-center w-screen h-screen flex items-center justify-center pt-10"
       style={{ backgroundImage: `url(${bg})` }}
     >
       {/* Outer Card Container */}
@@ -18,16 +50,20 @@ const AdminLogin = () => {
             Please log in using your given credentials.
           </p>
 
-          <form className="flex flex-col space-y-5">
+          <form onSubmit={handleSubmit} className="flex flex-col space-y-5">
             <input
               type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               placeholder="Email"
-              className="px-4 py-3 bg-[#e8e5e5] placeholder-black/60 text-white border border-white/30 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
+              className="px-4 py-3 bg-[#e8e5e588] placeholder-black/60 text-white border border-white/30 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
             />
             <input
               type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
               placeholder="Password"
-              className="px-4 py-3 bg-[#e8e5e5] placeholder-black/60 text-white border border-white/30 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
+              className="px-4 py-3 bg-[#e8e5e588] placeholder-black/60 text-white border border-white/30 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
             />
             <button
               type="submit"
@@ -42,8 +78,8 @@ const AdminLogin = () => {
           </p>
         </div>
 
-        {/* Right Side - Image (now on right, no shadow or zoom) */}
-        <div className="hidden md:flex w-1/2 bg-transparent pl-20">
+        {/* Right Side - Image*/}
+        <div className="hidden md:flex w-8/12 bg-transparent pl-20">
           <img
             src={loginImage}
             alt="Employee Portal Visual"
