@@ -4,25 +4,28 @@ const db = require('../db');
 
 // All accounts for a customer
 router.get('/customer/:id/accounts', async (req, res) => {
-  try {
-    const result = await db.query(
-      `SELECT a.* FROM account a
-       JOIN depositor d ON a.account_number = d.account_number
-       WHERE d.customer_id = $1`,
-      [req.params.id]
-    );
-    res.json(result.rows);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
+  const result = await db.query(
+    `SELECT a.* FROM account a
+     JOIN depositor d ON a.account_number = d.account_number
+     WHERE d.customer_id = $1`,
+    [req.params.id]
+  );
+  res.json(result.rows); // <-- array
 });
+
+
 
 // All loans for a customer
 router.get('/customer/:id/loans', async (req, res) => {
   try {
     const result = await db.query(
-      `SELECT l.* FROM loan l
+      `SELECT 
+         l.loan_number,
+         l.amount,
+         lb.branch_name
+       FROM loan l
        JOIN borrower b ON l.loan_number = b.loan_number
+       JOIN loan_branch lb ON l.loan_number = lb.loan_number
        WHERE b.customer_id = $1`,
       [req.params.id]
     );
@@ -31,6 +34,7 @@ router.get('/customer/:id/loans', async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 });
+
 
 // Accounts at a specific branch
 router.get('/branches/:name/accounts', async (req, res) => {

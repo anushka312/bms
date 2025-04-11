@@ -39,7 +39,7 @@ const otherRoutes = require('./routes/other');
 app.use('/other', otherRoutes);
 
 const transactionRoutes = require('./routes/transaction');
-app.use('/transaction', transactionRoutes);
+app.use('/transactions', transactionRoutes);
 
 app.listen(5000, ()=>{
     console.log("server has started on port 5000");

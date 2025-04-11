@@ -13,17 +13,27 @@ router.get('/', async (req, res) => {
 });
 
 // Get account by ID
-router.get('/:id', async (req, res) => {
+// GET /accounts/customer/:customer_id
+router.get('/customer/:id', async (req, res) => {
   try {
-    const result = await db.query('SELECT * FROM account WHERE account_number = $1', [req.params.id]);
+    const result = await db.query(
+      `SELECT a.*
+       FROM account a
+       JOIN depositor d ON a.account_number = d.account_number
+       WHERE d.customer_id = $1`,
+      [req.params.id]
+    );
+
     if (result.rows.length === 0) {
-      return res.status(404).json({ message: 'Account not found' });
+      return res.status(404).json({ message: 'No deposit account found' });
     }
-    res.json(result.rows[0]);
+
+    res.json(result.rows[0]); // or res.json(result.rows) if user has multiple
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 });
+
 
 // Add an account
 router.post('/', async (req, res) => {

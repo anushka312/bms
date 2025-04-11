@@ -1,80 +1,139 @@
-import React, { useState, useEffect } from 'react';
-import dashboard from '../../assets/dashboard.jpg';
-import { Menu, X } from 'lucide-react';
-import { NavLink } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
+import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import { useAuth } from '../../context/AuthContext';
+import { motion } from 'framer-motion';
 
 const UDashboard = () => {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const { user, logout } = useAuth();
-  const [userData, setUserData] = useState(null);
+  const { user } = useAuth();
+  const [account, setAccount] = useState(null);
+  const [transactions, setTransactions] = useState([]);
+  const [loading, setLoading] = useState(true); // Loading state to track data fetching
+
+  const fetchAccount = async () => {
+    if (!user?.customer_id) return;
+
+    setLoading(true); // Set loading to true when fetching starts
+    try {
+      const res = await axios.get(`http://localhost:5000/accounts/customer/${user.customer_id}`);
+      setAccount(res.data);
+    } catch (err) {
+      console.error('Failed to fetch account:', err);
+      setAccount(null);
+    } finally {
+      setLoading(false); // Set loading to false once the data is fetched
+    }
+  };
+
+  const fetchTransactions = async () => {
+    if (!user?.customer_id) return;
+
+    setLoading(true); // Set loading to true when fetching starts
+    try {
+      const trimmedCustomerId = user.customer_id?.toString().trim();
+      const res = await axios.get(`http://localhost:5000/transactions/customer/${trimmedCustomerId}`);
+
+
+
+      setTransactions(res.data || []);
+    } catch (err) {
+      console.error('Failed to fetch transactions:', err);
+    } finally {
+      setLoading(false); // Set loading to false once the data is fetched
+    }
+  };
 
   useEffect(() => {
-    const fetchUserData = async () => {
-      if (user?.customer_id) {
-        try {
-          const res = await axios.get(`http://localhost:5000/customer/${user.customer_id}`);
-          setUserData(res.data);
-          
-        } catch (err) {
-          console.error('Failed to fetch user data:', err);
-        }
-      }
-    };
+    fetchAccount();
+    fetchTransactions();
+  }, [user?.customer_id]);
 
-    fetchUserData();
-  }, [user]);
+  const createAccount = async () => {
+    try {
+      await axios.post('http://localhost:5000/accounts', {
+        account_number: user.customer_id,
+        balance: 0,
+      });
+      alert('Account created!');
+      fetchAccount();
+    } catch (err) {
+      console.error('Error creating account:', err);
+      alert('Failed to create account');
+    }
+  };
 
   return (
-    <div
-      className="w-screen h-screen bg-cover bg-center flex relative transition-all duration-500"
-      style={{ backgroundImage: `url(${dashboard})` }}
-    >
-      {/* Sidebar */}
-      <div
-        className={`fixed top-0 left-0 h-full w-64 bg-white shadow-md transform transition-transform duration-300 z-50
-        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}
+    <div className="p-4">
+      <motion.h1
+        className="text-7xl p-3"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 1 }}
       >
-        <div className="h-full flex flex-col justify-end p-6 gap-6 text-gray-800 font-medium">
-          <p className="text-md text-gray-500">
-            Welcome, {userData?.customer_name || user?.customer_name || "Guest"}
-          </p>
-          <NavLink
-            to="/uhome"
-            className={({ isActive }) =>
-              `p-2 rounded-lg transition ${
-                isActive ? 'bg-gray-200 font-semibold' : 'hover:bg-gray-100'
-              }`
-            }
-          >
-            Dashboard
-          </NavLink>
-          <NavLink to="/transactions" className="p-2 rounded-lg hover:bg-gray-100 transition">
-            Transactions
-          </NavLink>
-          <NavLink to="/profile" className="p-2 rounded-lg hover:bg-gray-100 transition">
-            Profile
-          </NavLink>
-          <NavLink to="/settings" className="p-2 rounded-lg hover:bg-gray-100 transition">
-            Settings
-          </NavLink>
-          <button
-            onClick={logout}
-            className="p-2 rounded-lg hover:bg-gray-100 transition text-left"
-          >
-            Logout
-          </button>
-        </div>
-      </div>
+        Hello, {user?.customer_name || 'Guest'}!
+      </motion.h1>
 
-      {/* Toggle Button */}
-      <button
-        className="absolute top-4 left-6 z-50 bg-white p-2 rounded-full shadow-lg hover:bg-gray-100 transition"
-        onClick={() => setSidebarOpen(!sidebarOpen)}
-      >
-        {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
-      </button>
+      {loading ? (
+        <div className="flex justify-center items-center mt-8">
+          <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-600"></div>
+        </div>
+      ) : (
+        <>
+          {!account ? (
+            <div className="mt-8 p-3">
+              <p className="text-xl mb-4">You don't have an account yet.</p>
+              <button
+                className="bg-blue-600 text-white px-6 py-2 rounded-xl shadow hover:bg-blue-700 transition"
+                onClick={createAccount}
+              >
+                Create Account
+              </button>
+            </div>
+          ) : (
+            <>
+              <h2 className="text-3xl font-bold mt-8">Account Info</h2>
+              <div className="bg-white shadow-md rounded-xl p-6 my-4">
+                <p><strong>Account Number:</strong> {account.account_number}</p>
+                <p><strong>Balance:</strong> ₹ {account.balance}</p>
+              </div>
+
+              <h2 className="text-2xl font-semibold mt-8 mb-4">Recent Transactions</h2>
+              <div className="max-h-[400px] overflow-y-auto rounded-lg shadow-lg">
+                <table className="min-w-full bg-white">
+                  <thead className="bg-gray-100 text-gray-700">
+                    <tr>
+                      <th className="py-2 px-4 text-left">Sender</th>
+                      <th className="py-2 px-4 text-left">Receiver</th>
+                      <th className="py-2 px-4 text-left">Amount</th>
+                      <th className="py-2 px-4 text-left">Time</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {transactions.length === 0 ? (
+                      <tr>
+                        <td colSpan="4" className="py-4 px-4 text-center text-gray-500">
+                          No transactions found
+                        </td>
+                      </tr>
+                    ) : (
+                      transactions.map((txn, idx) => (
+                        <tr
+                          key={idx}
+                          className={`border-b ${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'} hover:bg-gray-100`}
+                        >
+                          <td className="py-2 px-4">{txn.sender_account}</td>
+                          <td className="py-2 px-4">{txn.receiver_account}</td>
+                          <td className="py-2 px-4">₹ {txn.amount}</td>
+                          <td className="py-2 px-4">{new Date(txn.timestamp).toLocaleString()}</td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          )}
+        </>
+      )}
     </div>
   );
 };

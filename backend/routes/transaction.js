@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const db = require('../db');
 
-// Get all transactions (or filtered by account if query param passed)
+// Get all transactions (or filtered by account)
 router.get('/', async (req, res) => {
   const { account } = req.query; 
   try {
@@ -25,7 +25,39 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Add a new transaction (includes fund transfer logic)
+// Get transactions for a customer by ID
+router.get('/customer/:customerId', async (req, res) => {
+  const { customerId } = req.params;
+
+  try {
+    // Step 1: Get all account numbers of the customer
+    const accountsRes = await db.query(
+      `SELECT account_number FROM depositor WHERE customer_id = $1`,
+      [customerId]
+    );
+
+    const accountNumbers = accountsRes.rows.map(row => row.account_number);
+
+    if (accountNumbers.length === 0) {
+      return res.status(404).json({ message: 'No accounts found for this customer' });
+    }
+
+    // Step 2: Fetch transactions where sender or receiver is in those accounts
+    const result = await db.query(
+      `SELECT * FROM transaction_history
+       WHERE sender_account = ANY($1) OR receiver_account = ANY($1)
+       ORDER BY timestamp DESC`,
+      [accountNumbers]
+    );
+
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Failed to fetch customer transactions' });
+  }
+});
+
+// Add a new transaction
 router.post('/', async (req, res) => {
   const { sender_account, receiver_account, amount } = req.body;
 

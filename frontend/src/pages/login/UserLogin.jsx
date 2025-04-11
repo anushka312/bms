@@ -9,7 +9,7 @@ const UserLogin = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const { login } = useAuth();  // inside component
+  const { login } = useAuth();  
 
 const handleSubmit = async (e) => {
   e.preventDefault();
@@ -25,7 +25,7 @@ const handleSubmit = async (e) => {
 
     if (response.ok) {
       alert('Login successful');
-      console.log('User:', data);
+      // console.log('User:', data);
 
       login(data.user); // Store user in context
 

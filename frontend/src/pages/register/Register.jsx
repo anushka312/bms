@@ -3,6 +3,7 @@ import register from '/src/assets/register.jpg';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { Eye, EyeOff } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext'; 
 
 const Register = () => {
     const navigate = useNavigate();
@@ -14,6 +15,7 @@ const Register = () => {
         password: '',
         confirmPassword: '',
     });
+    const { login } = useAuth();
 
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -40,9 +42,11 @@ const Register = () => {
             });
 
             const data = await response.json();
+            console.log("Registered user data:", data);
 
             if (response.ok) {
                 alert('Registration successful!');
+                login(data.user); 
                 navigate('/uhome');
             } else {
                 alert(`Error: ${data.message || 'Something went wrong'}`);
