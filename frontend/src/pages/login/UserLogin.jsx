@@ -2,39 +2,42 @@ import React, { useState } from 'react';
 import bg from '/src/assets/bg.jpg';
 import loginImage from '/src/assets/login-image.png';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext'; 
 
 
 const UserLogin = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const handleSubmit = async (e) => {
-    e.preventDefault(); // prevent page reload
-  
-    try {
-      const response = await fetch('http://localhost:5000/customers/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
-      });
-  
-      const data = await response.json();
-  
-      if (response.ok) {
-        alert('Login successful');
-        console.log('User:', data);
-        navigate('/uhome');
+  const { login } = useAuth();  // inside component
 
-      } else {
-        alert(data.message || 'Login failed');
-      }
-    } catch (error) {
-      console.error('Login error:', error);
-      alert('Server error');
+const handleSubmit = async (e) => {
+  e.preventDefault();
+
+  try {
+    const response = await fetch('http://localhost:5000/customer/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+      alert('Login successful');
+      console.log('User:', data);
+
+      login(data.user); // Store user in context
+
+      navigate('/uhome'); // Redirect to dashboard
+    } else {
+      alert(data.message || 'Login failed');
     }
-  };
+  } catch (error) {
+    console.error('Login error:', error);
+    alert('Server error');
+  }
+};
   
   return (
     <div

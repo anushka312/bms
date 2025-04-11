@@ -9,7 +9,7 @@ app.use(express.json()); //It lets you read req.body as a JavaScript object when
 
 // ROUTES
 const customerRoutes = require('./routes/customer');
-app.use('/customers', customerRoutes);
+app.use('/customer', customerRoutes);
 
 const accountRoutes = require('./routes/account');
 app.use('/accounts', accountRoutes);
@@ -37,6 +37,9 @@ app.use('/loan', loanRoutes);
 
 const otherRoutes = require('./routes/other');
 app.use('/other', otherRoutes);
+
+const transactionRoutes = require('./routes/transaction');
+app.use('/transaction', transactionRoutes);
 
 app.listen(5000, ()=>{
     console.log("server has started on port 5000");

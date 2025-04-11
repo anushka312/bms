@@ -25,13 +25,17 @@ const Navbar = () => {
         {/* Right Section (Button) */}
         <div>
           <button
-            className="bg-gradient-to-r from-[#00FFA3] to-[#DC1FFF] hover:brightness-110
-            transition duration-300 rounded-full text-white font-semibold shadow-lg 
-            px-6 py-2"
+            className="relative overflow-hidden rounded-full px-6 py-2 font-semibold text-white shadow-lg
+             hover:brightness-110 transition duration-300 group"
             onClick={() => navigate('/register')}
           >
-            Join Us
+            <span
+              className="absolute inset-0 animate-gradient-x bg-gradient-to-r from-[#00FFA3] via-[#DC1FFF] to-[#00FFA3]
+               bg-[length:300%_300%] group-hover:scale-105 transition-transform duration-300"
+            ></span>
+            <span className="relative z-10">Join Us</span>
           </button>
+
         </div>
       </div>
     </header>

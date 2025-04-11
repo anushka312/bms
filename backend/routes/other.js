@@ -3,7 +3,7 @@ const router = express.Router();
 const db = require('../db');
 
 // All accounts for a customer
-router.get('/customers/:id/accounts', async (req, res) => {
+router.get('/customer/:id/accounts', async (req, res) => {
   try {
     const result = await db.query(
       `SELECT a.* FROM account a
@@ -18,7 +18,7 @@ router.get('/customers/:id/accounts', async (req, res) => {
 });
 
 // All loans for a customer
-router.get('/customers/:id/loans', async (req, res) => {
+router.get('/customer/:id/loans', async (req, res) => {
   try {
     const result = await db.query(
       `SELECT l.* FROM loan l
@@ -48,7 +48,7 @@ router.get('/branches/:name/accounts', async (req, res) => {
 });
 
 // Customers handled by an employee
-router.get('/employees/:id/customers', async (req, res) => {
+router.get('/employees/:id/customer', async (req, res) => {
   try {
     const result = await db.query(
       `SELECT c.* FROM customer c
