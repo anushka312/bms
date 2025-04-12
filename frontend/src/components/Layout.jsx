@@ -16,7 +16,7 @@ const Layout = ({ children }) => {
 
   return (
     <div
-      className="w-screen h-screen bg-cover bg-center flex relative overflow-hidden"
+      className="w-screen h-screen bg-cover bg-center flex relative overflow-hidden   max-h-screen overflow-y-auto"
       style={{ backgroundImage: `url(${dashboard})` }}
     >
       {/* Sidebar */}

@@ -63,4 +63,31 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
+router.get('/loans/customer/:customerId', async (req, res) => {
+  const { customerId } = req.params;
+  try {
+    const result = await db.query(`
+      SELECT 
+        l.loan_number,
+        l.amount AS total_loan_amount,
+        COALESCE(SUM(p.payment_amount), 0) AS amount_paid,
+        (l.amount - COALESCE(SUM(p.payment_amount), 0)) AS amount_remaining,
+        MAX(p.payment_date) AS last_payment_date,
+        lb.branch_name
+      FROM loan l
+      JOIN borrower b ON b.loan_number = l.loan_number
+      LEFT JOIN payment p ON p.loan_number = l.loan_number
+      LEFT JOIN loan_branch lb ON lb.loan_number = l.loan_number
+      WHERE b.customer_id = $1
+      GROUP BY l.loan_number, l.amount, lb.branch_name;
+    `, [customerId]);
+
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Failed to fetch loan details");
+  }
+});
+
+
 module.exports = router;

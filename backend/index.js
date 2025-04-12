@@ -21,7 +21,7 @@ const branchRoutes = require('./routes/branch');
 app.use('/branch', branchRoutes);
 
 const custBankerRoutes = require('./routes/custbanker');
-app.use('/custbanker', custBankerRoutes);
+app.use('/custbankers', custBankerRoutes);
 
 const dependentRoutes = require('./routes/dependent');
 app.use('/dependent', dependentRoutes);

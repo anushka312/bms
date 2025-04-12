@@ -37,17 +37,29 @@ router.get('/customer/:id', async (req, res) => {
 
 // Add an account
 router.post('/', async (req, res) => {
-  const { account_number, balance } = req.body;
+  const { balance, customer_id } = req.body;
+
   try {
-    await db.query(
-      'INSERT INTO account (account_number, balance) VALUES ($1, $2)',
-      [account_number, balance]
+    // 1. Create new account
+    const accountResult = await db.query(
+      'INSERT INTO account (balance) VALUES ($1) RETURNING account_number',
+      [balance]
     );
-    res.status(201).json({ message: 'Account added' });
+    const accountNumber = accountResult.rows[0].account_number;
+
+    // 2. Link to customer in depositor table
+    await db.query(
+      'INSERT INTO depositor (customer_id, account_number) VALUES ($1, $2)',
+      [customer_id, accountNumber]
+    );
+
+    res.status(201).json({ message: 'Account created', account_number: accountNumber });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    console.error('Error creating account:', err);
+    res.status(500).json({ message: 'Error creating account' });
   }
 });
+
 
 // Update an account
 router.put('/:id', async (req, res) => {

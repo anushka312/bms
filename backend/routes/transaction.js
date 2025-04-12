@@ -113,4 +113,56 @@ router.post('/', async (req, res) => {
   }
 });
 
+router.get('/transactions/suspicious/:customerId', async (req, res) => {
+  const { customerId } = req.params;
+  const { amountThreshold, timeWindow } = req.query;  // `amountThreshold` and `timeWindow` passed via query params
+  
+  try {
+    const result = await db.query(`
+      WITH suspicious_transactions AS (
+        -- Step 1: Find transactions with amount > X
+        SELECT
+          txn.transaction_id,
+          txn.account_from,
+          txn.account_to,
+          txn.amount,
+          txn.timestamp,
+          txn.account_from AS sender_account,
+          txn.account_to AS recipient_account
+        FROM transaction txn
+        WHERE txn.amount > $1  -- X (amount threshold)
+
+        UNION ALL
+
+        -- Step 2: Find transactions from same sender within last Y minutes
+        SELECT
+          txn.transaction_id,
+          txn.account_from,
+          txn.account_to,
+          txn.amount,
+          txn.timestamp,
+          txn.account_from AS sender_account,
+          txn.account_to AS recipient_account
+        FROM transaction txn
+        WHERE txn.account_from IN (
+          SELECT account_number
+          FROM depositor
+          WHERE customer_id = $2  -- Customer ID
+        )
+        AND txn.timestamp > NOW() - INTERVAL $3  -- Y (time window)
+        GROUP BY txn.account_from, txn.timestamp
+        HAVING COUNT(txn.transaction_id) > 2
+      )
+      SELECT *
+      FROM suspicious_transactions
+      ORDER BY timestamp DESC;
+    `, [amountThreshold, customerId, timeWindow]);
+
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Failed to fetch suspicious transactions");
+  }
+});
+
 module.exports = router;
