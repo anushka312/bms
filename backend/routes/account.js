@@ -36,29 +36,28 @@ router.get('/customer/:id', async (req, res) => {
 
 
 // Add an account
+// POST /customer
 router.post('/', async (req, res) => {
-  const { balance, customer_id } = req.body;
+  const { customer_name, customer_street, customer_city, email, password } = req.body;
 
   try {
-    // 1. Create new account
-    const accountResult = await db.query(
-      'INSERT INTO account (balance) VALUES ($1) RETURNING account_number',
-      [balance]
-    );
-    const accountNumber = accountResult.rows[0].account_number;
-
-    // 2. Link to customer in depositor table
-    await db.query(
-      'INSERT INTO depositor (customer_id, account_number) VALUES ($1, $2)',
-      [customer_id, accountNumber]
+    // Insert customer into the database (customer_id is auto-generated with SERIAL)
+    const result = await db.query(
+      `INSERT INTO Customer (customer_name, customer_street, customer_city, email, password)
+       VALUES ($1, $2, $3, $4, $5)
+       RETURNING customer_id, customer_name, email`,
+      [customer_name, customer_street, customer_city, email, password]
     );
 
-    res.status(201).json({ message: 'Account created', account_number: accountNumber });
+    const user = result.rows[0];
+
+    res.status(201).json({ message: 'Customer registered successfully', user });
   } catch (err) {
-    console.error('Error creating account:', err);
-    res.status(500).json({ message: 'Error creating account' });
+    console.error('Error registering customer:', err);
+    res.status(500).json({ message: 'Error registering customer' });
   }
 });
+
 
 
 // Update an account

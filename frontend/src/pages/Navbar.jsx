@@ -10,8 +10,8 @@ const Navbar = () => {
 
         {/* Left Section (Logo + Nav Links) */}
         <div className="flex items-center space-x-12">
-          <div className="text-white text-2xl font-bold tracking-wider drop-shadow-sm">
-            Logo
+          <div className=" text-2xl text-gray-700 tracking-wider drop-shadow-sm" onClick={() => navigate('/')}>
+            FinCore
           </div>
 
           <nav className="hidden md:flex space-x-8">

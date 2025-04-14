@@ -3,7 +3,7 @@ import register from '/src/assets/register.jpg';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { Eye, EyeOff } from 'lucide-react';
-import { useAuth } from '../../context/AuthContext'; 
+import { useAuth } from '../../context/AuthContext';
 
 const Register = () => {
     const navigate = useNavigate();
@@ -46,7 +46,7 @@ const Register = () => {
 
             if (response.ok) {
                 alert('Registration successful!');
-                login(data.user); 
+                login(data.user);
                 navigate('/uhome');
             } else {
                 alert(`Error: ${data.message || 'Something went wrong'}`);
@@ -121,7 +121,7 @@ const Register = () => {
                             placeholder="Email"
                             className="w-full px-4 py-2 rounded-md border border-gray-300 focus:ring-2 focus:ring-blue-500"
                         />
-                        
+
                         {/* Password field with toggle */}
                         <div className="relative">
                             <input
@@ -164,6 +164,11 @@ const Register = () => {
                         >
                             Register
                         </button>
+                        <div className="flex justify-center items-center">
+                            <p className="text-black text-center">
+                                Already have an account? <a href="/ulogin" className="text-blue-600">Login</a>
+                            </p>
+                        </div>
                     </form>
                 </div>
             </div>
