@@ -12,7 +12,7 @@ const customerRoutes = require('./routes/customer');
 app.use('/customer', customerRoutes);
 
 const accountRoutes = require('./routes/account');
-app.use('/accounts', accountRoutes);
+app.use('/account', accountRoutes);
 
 const borrowerRoutes = require('./routes/borrower');
 app.use('/borrower', borrowerRoutes);
@@ -21,7 +21,7 @@ const branchRoutes = require('./routes/branch');
 app.use('/branch', branchRoutes);
 
 const custBankerRoutes = require('./routes/custbanker');
-app.use('/custbankers', custBankerRoutes);
+app.use('/custbanker', custBankerRoutes);
 
 const dependentRoutes = require('./routes/dependent');
 app.use('/dependent', dependentRoutes);
@@ -39,7 +39,7 @@ const otherRoutes = require('./routes/other');
 app.use('/other', otherRoutes);
 
 const transactionRoutes = require('./routes/transaction');
-app.use('/transactions', transactionRoutes);
+app.use('/transaction', transactionRoutes);
 
 app.listen(5000, ()=>{
     console.log("server has started on port 5000");

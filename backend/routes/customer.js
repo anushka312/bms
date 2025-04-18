@@ -91,28 +91,125 @@ router.post('/login', async (req, res) => {
 });
 
 // Update customer
+
 router.put('/:id', async (req, res) => {
-  const { customer_name, customer_street, customer_city } = req.body;
+  // Extracting fields from the request body
+  const { customer_name, customer_street, customer_city, password } = req.body;
+
+  // Array to hold the values to be updated dynamically
+  let updateFields = [];
+  let queryParams = [];
+  
+  // If password is provided, hash it before updating
+  if (password) {
+    const hashedPassword = await bcrypt.hash(password, 10);
+    updateFields.push('password = $' + (queryParams.length + 1)); 
+    queryParams.push(hashedPassword);
+  }
+  
+  // Add other fields to update if provided
+  if (customer_name) {
+    updateFields.push('customer_name = $' + (queryParams.length + 1));
+    queryParams.push(customer_name);
+  }
+
+  if (customer_street) {
+    updateFields.push('customer_street = $' + (queryParams.length + 1));
+    queryParams.push(customer_street);
+  }
+
+  if (customer_city) {
+    updateFields.push('customer_city = $' + (queryParams.length + 1));
+    queryParams.push(customer_city);
+  }
+
+  // If no fields are provided to update, return a message
+  if (updateFields.length === 0) {
+    return res.status(400).json({ message: 'No valid fields to update' });
+  }
+
+  // Constructing the query with the updated fields
+  const query = `
+    UPDATE customer
+    SET 
+      ${updateFields.join(', ')}  
+    WHERE customer_id = $${queryParams.length + 1}  
+  `;
+
+  // Adding customer_id as the last parameter
+  queryParams.push(req.params.id);
 
   try {
-    await db.query(
-      'UPDATE customer SET customer_name = $1, customer_street = $2, customer_city = $3 WHERE customer_id = $4',
-      [customer_name, customer_street, customer_city, req.params.id]
-    );
-    res.json({ message: 'Customer updated' });
+    await db.query(query, queryParams); // Execute the query
+    res.json({ message: 'Customer updated successfully' });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 });
+
 
 // Delete customer
+// DELETE /customer/:id — Full Deep Delete
 router.delete('/:id', async (req, res) => {
+  const customerId = req.params.id;
+  const client = await db.connect();
+
   try {
-    await db.query('DELETE FROM customer WHERE customer_id = $1', [req.params.id]);
-    res.json({ message: 'Customer deleted' });
+    await client.query('BEGIN');
+
+    // Get all account_numbers linked to the customer
+    const accRes = await client.query(
+      `SELECT account_number FROM depositor WHERE customer_id = $1`,
+      [customerId]
+    );
+    const accountNumbers = accRes.rows.map(row => row.account_number);
+
+    // Delete from savings_account & checking_account
+    for (const accNum of accountNumbers) {
+      await client.query(`DELETE FROM savings_account WHERE account_number = $1`, [accNum]);
+      await client.query(`DELETE FROM checking_account WHERE account_number = $1`, [accNum]);
+    }
+
+    // Delete from transaction_history
+    for (const accNum of accountNumbers) {
+      await client.query(
+        `DELETE FROM transaction_history 
+         WHERE sender_account = $1 OR receiver_account = $1`,
+        [accNum]
+      );
+    }
+
+    // Delete from account_branch
+    for (const accNum of accountNumbers) {
+      await client.query(`DELETE FROM account_branch WHERE account_number = $1`, [accNum]);
+    }
+
+    // Delete from depositor
+    await client.query(`DELETE FROM depositor WHERE customer_id = $1`, [customerId]);
+
+    // Delete from cust_banker
+    await client.query(`DELETE FROM cust_banker WHERE customer_id = $1`, [customerId]);
+
+    // Delete from account table
+    for (const accNum of accountNumbers) {
+      await client.query(`DELETE FROM account WHERE account_number = $1`, [accNum]);
+    }
+
+    // Finally delete customer
+    await client.query(`DELETE FROM customer WHERE customer_id = $1`, [customerId]);
+
+    await client.query('COMMIT');
+
+    res.json({ message: 'Customer and all related data deleted successfully' });
+
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    await client.query('ROLLBACK');
+    console.error('Deletion error:', err);
+    res.status(500).json({ message: 'Failed to delete customer' });
+  } finally {
+    client.release();
   }
 });
+
 
 module.exports = router;

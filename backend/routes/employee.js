@@ -15,6 +15,31 @@ router.get('/', async (req, res) => {
   }
 });
 
+// Get assigned employee info for a customer
+router.get('/:customer_id', async (req, res) => {
+  const { customer_id } = req.params;
+
+  try {
+    const result = await db.query(
+      `SELECT e.employee_name, e.telephone_number, e.email 
+       FROM cust_banker cb
+       JOIN employee e ON cb.employee_id = e.employee_id
+       WHERE cb.customer_id = $1
+       LIMIT 1`,
+      [customer_id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'No assigned employee found' });
+    }
+
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error("Error fetching employee info:", err);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
 // Get employee by ID
 router.get('/:id', async (req, res) => {
   try {
@@ -76,5 +101,32 @@ router.delete('/:id', async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 });
+
+// Insert a new employee (with hashed password)
+router.post('/', async (req, res) => {
+  const { employee_name, telephone_number, start_date, email, password, branch_name } = req.body;
+
+  try {
+    // Hash the password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Insert the new employee with the hashed password
+    const result = await db.query(
+      `INSERT INTO employee (employee_name, telephone_number, start_date, email, password, branch_name) 
+       VALUES ($1, $2, $3, $4, $5, $6) RETURNING employee_id`,
+      [employee_name, telephone_number, start_date, email, hashedPassword, branch_name]
+    );
+
+    const employee_id = result.rows[0].employee_id; // Get the employee ID of the newly created employee
+
+    res.status(201).json({
+      message: 'Employee successfully created',
+      employee_id
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
 
 module.exports = router;

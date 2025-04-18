@@ -16,7 +16,7 @@ const Layout = ({ children }) => {
 
   return (
     <div
-      className="w-screen h-screen bg-cover bg-center flex relative overflow-hidden   max-h-screen overflow-y-auto"
+      className="w-screen h-screen bg-cover bg-center flex relative overflow-hidden max-h-screen overflow-y-auto"
       style={{ backgroundImage: `url(${dashboard})` }}
     >
       {/* Sidebar */}
@@ -37,22 +37,26 @@ const Layout = ({ children }) => {
               <NavLink
                 to="/uhome"
                 className={({ isActive }) =>
-                  `p-2 rounded-lg transition  ${isActive ? 'bg-white/50 font-bold' : 'hover:bg-white/40'}`
+                  `p-2 rounded-lg transition ${isActive ? 'bg-white/50 font-bold' : 'hover:bg-white/40'}`
                 }
               >
                 Dashboard
               </NavLink>
-              <NavLink to="/transactions" className={({ isActive }) =>
-                  `p-2 rounded-lg transition  ${isActive ? 'bg-white/50 font-bold' : 'hover:bg-white/40'}`}>
+              <NavLink
+                to="/transactions"
+                className={({ isActive }) =>
+                  `p-2 rounded-lg transition ${isActive ? 'bg-white/50 font-bold' : 'hover:bg-white/40'}`
+                }
+              >
                 Transactions
               </NavLink>
-              <NavLink to="/profile" className={({ isActive }) =>
-                  `p-2 rounded-lg transition  ${isActive ? 'bg-white/50 font-bold' : 'hover:bg-white/40'}`}>
+              <NavLink
+                to="/profile"
+                className={({ isActive }) =>
+                  `p-2 rounded-lg transition ${isActive ? 'bg-white/50 font-bold' : 'hover:bg-white/40'}`
+                }
+              >
                 Profile
-              </NavLink>
-              <NavLink to="/settings" className={({ isActive }) =>
-                  `p-2 rounded-lg transition  ${isActive ? 'bg-white/50 font-bold' : 'hover:bg-white/40'}`}>
-                Settings
               </NavLink>
               <button
                 onClick={handleLogout}
@@ -65,10 +69,10 @@ const Layout = ({ children }) => {
         </aside>
       )}
 
-      {/* Toggle Button */}
+      {/* Menu Button (Only visible when the sidebar is closed) */}
       {!sidebarOpen && (
         <button
-          className="absolute top-4 left-4 z-50 bg-transparent p-2 hover:bg-gray-100 transition"
+          className="fixed top-4 left-4 z-50 bg-transparent p-2 hover:bg-gray-100 transition"
           onClick={() => setSidebarOpen(true)}
         >
           <Menu size={20} />
@@ -76,7 +80,11 @@ const Layout = ({ children }) => {
       )}
 
       {/* Main Content */}
-      <main className={`flex-1 mt-20 p-4 transition-all duration-300 ${sidebarOpen ? 'md:ml-64' : ''}`}>
+      <main
+        className={`flex-1 mt-20 p-4 transition-all duration-300 ${
+          sidebarOpen ? 'md:ml-64' : ''
+        }`}
+      >
         {children}
       </main>
     </div>

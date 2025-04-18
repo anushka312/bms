@@ -4,7 +4,6 @@ import UserLogin from './pages/login/UserLogin';
 import AdminLogin from './pages/login/AdminLogin';
 import UDashboard from './pages/dashboard/UDashboard';
 import ADashboard from './pages/dashboard/ADashboard';
-import Settings from './pages/dashboard/Settings';
 import Profile from './pages/dashboard/Profile';
 import Transactions from './pages/dashboard/Transactions';
 import Navbar from './pages/Navbar';
@@ -27,7 +26,6 @@ const App = () => {
         <Route path="/uhome" element={<Layout><UDashboard /></Layout>} />
         <Route path="/transactions" element={<Layout><Transactions /></Layout>} />
         <Route path="/profile" element={<Layout><Profile /></Layout>} />
-        <Route path="/settings" element={<Layout><Settings /></Layout>} />
         <Route path="/register" element={<Register />} />
         <Route path="/loan" element={<Loan />} />
         <Route path="/about" element={<About />} />

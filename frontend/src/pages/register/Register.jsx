@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import register from '/src/assets/register.jpg';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
@@ -7,6 +7,8 @@ import { useAuth } from '../../context/AuthContext';
 
 const Register = () => {
     const navigate = useNavigate();
+    const { login } = useAuth();
+
     const [formData, setFormData] = useState({
         customer_name: '',
         customer_street: '',
@@ -15,10 +17,25 @@ const Register = () => {
         password: '',
         confirmPassword: '',
     });
-    const { login } = useAuth();
 
+    const [cities, setCities] = useState([]);
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+    // Fetch available cities from branch table
+    useEffect(() => {
+        const fetchCities = async () => {
+            try {
+                const res = await fetch('http://localhost:5000/branch/cities');
+                const data = await res.json();
+                setCities(data); // Expects: ["Delhi", "Mumbai", ...]
+            } catch (err) {
+                console.error('Error fetching cities:', err);
+            }
+        };
+
+        fetchCities();
+    }, []);
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -105,14 +122,23 @@ const Register = () => {
                             placeholder="Street"
                             className="w-full px-4 py-2 rounded-md border border-gray-300 focus:ring-2 focus:ring-blue-500"
                         />
-                        <input
-                            type="text"
+
+                        {/* 🔽 City Dropdown */}
+                        <select
                             name="customer_city"
                             value={formData.customer_city}
                             onChange={handleChange}
-                            placeholder="City"
                             className="w-full px-4 py-2 rounded-md border border-gray-300 focus:ring-2 focus:ring-blue-500"
-                        />
+                            required
+                        >
+                            <option value="">Select City</option>
+                            {cities.map((city, idx) => (
+                                <option key={idx} value={city}>
+                                    {city}
+                                </option>
+                            ))}
+                        </select>
+
                         <input
                             type="email"
                             name="email"

@@ -26,14 +26,14 @@ router.get('/', async (req, res) => {
 });
 
 // Get transactions for a customer by ID
-router.get('/customer/:customerId', async (req, res) => {
-  const { customerId } = req.params;
+router.get('/customer/:customer_id', async (req, res) => {
+  const { customer_id } = req.params;
 
   try {
     // Step 1: Get all account numbers of the customer
     const accountsRes = await db.query(
       `SELECT account_number FROM depositor WHERE customer_id = $1`,
-      [customerId]
+      [customer_id]
     );
 
     const accountNumbers = accountsRes.rows.map(row => row.account_number);
