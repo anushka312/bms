@@ -19,6 +19,7 @@ const Profile = () => {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [passwordError, setPasswordError] = useState('');
+  const [showPasswords, setShowPasswords] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
   useEffect(() => {
@@ -59,55 +60,103 @@ const Profile = () => {
 
   const handleSave = async () => {
     try {
-      // If any password fields are filled, validate and update password
+      let madeChanges = false;
+
+      // 1. Update password if fields are filled
       if (currentPassword || newPassword || confirmPassword) {
+        if (!currentPassword || !newPassword || !confirmPassword) {
+          setPasswordError('Please fill in all password fields.');
+          return;
+        }
+
         if (newPassword !== confirmPassword) {
           setPasswordError('Passwords do not match.');
           return;
         }
 
-        const updatePasswordData = {
-          current_password: currentPassword,
-          new_password: newPassword,
+        const passwordPayload = {
+          password: newPassword,
         };
 
-        await axios.put(`http://localhost:5000/customer/${customer_id}/change-password`, updatePasswordData);
-        alert("Password updated successfully!");
-        setCurrentPassword('');
-        setNewPassword('');
-        setConfirmPassword('');
-        setPasswordError('');
+        const passwordRes = await axios.put(
+          `http://localhost:5000/customer/${customer_id}`,
+          passwordPayload
+        );
+
+        if (passwordRes.status === 200) {
+          alert("Password updated successfully!");
+          setCurrentPassword('');
+          setNewPassword('');
+          setConfirmPassword('');
+          setPasswordError('');
+          madeChanges = true;
+        } else {
+          setPasswordError('Password update failed. Please try again.');
+          return;
+        }
+      }
+      
+      // 2. Update profile if anything has changed
+      const profilePayload = {};
+      if (formData.customer_name !== profileData.customer_name) {
+        profilePayload.customer_name = formData.customer_name;
+      }
+      if (formData.customer_street !== profileData.customer_street) {
+        profilePayload.customer_street = formData.customer_street;
+      }
+      if (formData.customer_city !== profileData.customer_city) {
+        profilePayload.customer_city = formData.customer_city;
       }
 
-      // Update profile info
-      const updateData = {
-        customer_name: formData.customer_name,
-        customer_street: formData.customer_street,
-      };
+      if (Object.keys(profilePayload).length > 0) {
+        const profileRes = await axios.put(
+          `http://localhost:5000/customer/${customer_id}`,
+          profilePayload
+        );
 
-      await axios.put(`http://localhost:5000/customer/${customer_id}`, updateData);
-      setProfileData(prev => ({
-        ...prev,
-        ...updateData,
-      }));
+        if (profileRes.status === 200) {
+          setProfileData(prev => ({
+            ...prev,
+            ...profilePayload,
+          }));
+          madeChanges = true;
+        }
+      }
+
+      if (madeChanges) {
+        alert("Profile saved successfully!");
+      } else {
+        alert("No changes detected.");
+      }
+
       setIsEditing(false);
-      alert("Profile updated successfully!");
     } catch (err) {
-      console.error("Update failed:", err);
-      alert("Update failed. Try again.");
+      console.error("Update failed:", err.response || err);
+      if (err.response?.data?.message) {
+        alert(`Error: ${err.response.data.message}`);
+      } else {
+        alert("Update failed. Please try again.");
+      }
     }
   };
 
   const handleDeleteAccount = async () => {
     try {
-      await axios.delete(`http://localhost:5000/api/customer/${user.customer_id}`);
-      logout();
-      navigate('/ulogin');
+      const response = await axios.delete(`http://localhost:5000/account/${customer_id}`);
+  
+      if (response.status === 200) {
+        alert("Your account has been deleted.");
+        logout(); 
+        navigate('/'); 
+      } else {
+        alert("Failed to delete account. Please try again.");
+      }
     } catch (err) {
-      console.error('Error deleting account:', err);
-      alert('Something went wrong. Could not delete account.');
+      console.error("Error deleting account:", err);
+      alert("An error occurred while deleting your account.");
     }
   };
+  
 
   const openDeleteModal = () => setIsDeleteModalOpen(true);
   const closeDeleteModal = () => setIsDeleteModalOpen(false);
@@ -181,7 +230,7 @@ const Profile = () => {
                     <div className="flex flex-col space-y-2 pl-3">
                       <label className="font-semibold text-gray-700">Current Password</label>
                       <input
-                        type="password"
+                        type={showPasswords ? "text" : "password"}
                         value={currentPassword}
                         onChange={(e) => setCurrentPassword(e.target.value)}
                         className="border px-3 py-2 rounded-lg w-full"
@@ -191,7 +240,7 @@ const Profile = () => {
                     <div className="flex flex-col space-y-2 pl-3">
                       <label className="font-semibold text-gray-700">New Password</label>
                       <input
-                        type="password"
+                        type={showPasswords ? "text" : "password"}
                         value={newPassword}
                         onChange={(e) => setNewPassword(e.target.value)}
                         className="border px-3 py-2 rounded-lg w-full"
@@ -201,11 +250,19 @@ const Profile = () => {
                     <div className="flex flex-col space-y-2 pl-3">
                       <label className="font-semibold text-gray-700">Confirm New Password</label>
                       <input
-                        type="password"
+                        type={showPasswords ? "text" : "password"}
                         value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}
                         className="border px-3 py-2 rounded-lg w-full"
                       />
+                    </div>
+                    <div className="flex items-center space-x-2 mt-4 pl-3">
+                      <input
+                        type="checkbox"
+                        checked={showPasswords}
+                        onChange={() => setShowPasswords(prev => !prev)}
+                      />
+                      <label className="text-sm text-gray-700">Show Passwords</label>
                     </div>
 
                     {passwordError && <p className="text-red-500">{passwordError}</p>}
@@ -282,8 +339,8 @@ const Profile = () => {
       <motion.div
         className="w-full max-w-5xl mt-10 bg-red-100 rounded-xl shadow-md p-6 flex flex-row justify-between items-center"
         initial={{ opacity: 0 }}
-        animate={{ opacity: 1}}
-        transition={{ duration: 1.5 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.8, ease: 'easeOut' }}
       >
         <div>
           <h2 className="text-2xl font-bold text-red-600">Danger Zone</h2>
@@ -299,23 +356,23 @@ const Profile = () => {
         </button>
       </motion.div>
 
-
-
       {isDeleteModalOpen && (
-        <div className="fixed inset-0 bg-gray-500 bg-opacity-50 flex justify-center items-center">
-          <div className="bg-white p-6 rounded-lg w-96">
-            <h2 className="text-2xl font-semibold mb-4">Are you sure?</h2>
-            <p className="text-lg mb-4 text-center">You are about to lose all your data.</p>
-            <div className="flex justify-between gap-4">
+        <div className="fixed inset-0 bg-gray-500 bg-opacity-50 flex items-center justify-center">
+          <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
+            <h2 className="text-2xl font-bold text-gray-800">Are you sure?</h2>
+            <p className="text-gray-600 mt-4">
+              Once you delete your account, it cannot be undone. This action will permanently remove your profile and all associated data.
+            </p>
+            <div className="flex justify-between mt-6">
               <button
                 onClick={handleDeleteAccount}
-                className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg w-1/2"
+                className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg"
               >
-                Delete
+                Delete Account
               </button>
               <button
                 onClick={closeDeleteModal}
-                className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg w-1/2"
+                className="bg-gray-300 hover:bg-gray-400 text-black px-6 py-2 rounded-lg"
               >
                 Cancel
               </button>
