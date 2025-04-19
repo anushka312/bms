@@ -12,12 +12,25 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Get a customer-banker relationship by customer_id
-router.get('/:id', async (req, res) => {
+// Get a list of customers by employee_id 
+router.get('/:employee_id', async (req, res) => {
+  try {
+    const result = await db.query('SELECT * FROM cust_banker WHERE employee_id = $1', [req.params.employee_id]);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'No customers found for this employee' });
+    }
+    res.json(result.rows); // Return the list of customers assigned to this employee
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// Get a customer-banker relationship by customer_id (This is a more general route)
+router.get('/customer/:id', async (req, res) => {
   try {
     const result = await db.query('SELECT * FROM cust_banker WHERE customer_id = $1', [req.params.id]);
     if (result.rows.length === 0) {
-      return res.status(404).json({ message: 'No account found' });
+      return res.status(404).json({ message: 'No account found for this customer' });
     }
     res.json(result.rows);
   } catch (err) {
@@ -39,5 +52,6 @@ router.post('/', async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 });
+
 
 module.exports = router;

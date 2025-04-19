@@ -41,20 +41,7 @@ router.get('/:customer_id', async (req, res) => {
 });
 
 // Get employee by ID
-router.get('/:id', async (req, res) => {
-  try {
-    const result = await db.query(
-      'SELECT employee_id, employee_name, telephone_number, start_date, email FROM employee WHERE employee_id = $1',
-      [req.params.id]
-    );
-    if (result.rows.length === 0) {
-      return res.status(404).json({ message: 'Employee not found' });
-    }
-    res.json(result.rows[0]);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-});
+
 
 // Login
 router.post('/login', async (req, res) => {
@@ -71,8 +58,9 @@ router.post('/login', async (req, res) => {
     if (!valid) {
       return res.status(401).json({ message: 'Invalid email or password' });
     }
+    delete employee.password;
 
-    res.json({ message: 'Login successful' });
+    res.json({ message: 'Login successful', employee });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -128,5 +116,93 @@ router.post('/', async (req, res) => {
   }
 });
 
+router.get('/user_details/:id', async (req, res) => {
+  try {
+    const customerId = req.params.id;
+
+    // Get customer basic info
+    const customerRes = await db.query(
+      `SELECT customer_id, customer_name, email
+       FROM customer
+       WHERE customer_id = $1`,
+      [customerId]
+    );
+
+    if (customerRes.rowCount === 0) {
+      return res.status(404).json({ message: 'Customer not found' });
+    }
+
+    const customer = customerRes.rows[0];
+
+    // Check for loan
+    const loanRes = await db.query(
+      `SELECT b.loan_number, l.amount, l.status, l.total_payments, b.loan_start_date
+       FROM borrower b
+       JOIN loan l ON l.loan_number = b.loan_number
+       WHERE b.customer_id = $1`,
+      [customerId]
+    );
+
+    // Get payment info if loan exists
+    let payments = [];
+    if (loanRes.rowCount > 0) {
+      const loanNumber = loanRes.rows[0].loan_number;
+      const paymentRes = await db.query(
+        `SELECT payment_number, payment_date, payment_amount, payment_status, payment_made, due_date
+         FROM payment
+         WHERE loan_number = $1`,
+        [loanNumber]
+      );
+      payments = paymentRes.rows;
+    }
+
+    // Check for account
+    const accountRes = await db.query(
+      `SELECT a.account_number, a.balance
+       FROM depositor d
+       JOIN account a ON a.account_number = d.account_number
+       WHERE d.customer_id = $1`,
+      [customerId]
+    );
+
+    // Get transactions if account exists
+    let transactions = [];
+    if (accountRes.rowCount > 0) {
+      const accountNumber = accountRes.rows[0].account_number;
+      const transRes = await db.query(
+        `SELECT transaction_id, sender_account, receiver_account, amount, timestamp
+         FROM transaction_history
+         WHERE sender_account = $1 OR receiver_account = $1`,
+        [accountNumber]
+      );
+      transactions = transRes.rows;
+    }
+
+    res.json({
+      customer,
+      loan: loanRes.rows[0] || null,
+      payments,
+      account: accountRes.rows[0] || null,
+      transactions
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+router.get('/:id', async (req, res) => {
+  try {
+    const result = await db.query(
+      'SELECT employee_id, employee_name, telephone_number, start_date, email FROM employee WHERE employee_id = $1',
+      [req.params.id]
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'Employee not found' });
+    }
+    res.json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
 
 module.exports = router;

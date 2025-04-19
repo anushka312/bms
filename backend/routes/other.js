@@ -79,4 +79,106 @@ router.get('/loans/:id/payments', async (req, res) => {
   }
 });
 
+//total accounts under an employee
+router.get('/:id/accounts', async (req, res) => {
+  try {
+    const result = await db.query(
+      `SELECT COUNT(DISTINCT d.account_number) AS totalAccounts
+      FROM cust_banker cb
+        JOIN depositor d ON cb.customer_id = d.customer_id
+        WHERE cb.employee_id = $1; 
+    `,
+      [req.params.id]
+    );
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+
+//total loans under an employee
+router.get('/:id/loans', async (req, res) => {
+  try {
+    const result = await db.query(
+      `SELECT COUNT(DISTINCT b.loan_number) AS totalLoans
+      FROM cust_banker cb
+        JOIN borrower b ON cb.customer_id = b.customer_id
+        WHERE cb.employee_id = $1; 
+    `,
+      [req.params.id]
+    );
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+//total pending loans
+router.get('/:id/ploans', async (req, res) => {
+  try {
+    const result = await db.query(
+      `SELECT COUNT(DISTINCT b.loan_number) AS pendingLoans
+      FROM cust_banker cb
+      JOIN borrower b ON cb.customer_id = b.customer_id
+      JOIN loan l ON b.loan_number = l.loan_number
+      WHERE cb.employee_id = $1
+      AND l.status = 'pending';
+
+    `,
+      [req.params.id]
+    );
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// users name under employees created in the branch
+router.get('/users_name/:id', async (req, res) => {
+  try {
+    const result = await db.query(
+      `SELECT customer_name, c.customer_id, email
+       FROM customer c
+       join cust_banker cb on cb.customer_id = c.customer_id
+       where employee_id = $1
+      
+    `,
+      [req.params.id]
+    );
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+router.get('/loan_details/:id', async (req, res) => {
+  try {
+    const result = await db.query(
+      `SELECT 
+                  c.customer_name, 
+                    c.customer_id, 
+                    c.email, 
+                    l.status, 
+                  b.loan_start_date
+          FROM 
+              customer c
+          JOIN 
+              cust_banker cb ON cb.customer_id = c.customer_id
+          JOIN 
+              borrower b ON b.customer_id = c.customer_id
+          JOIN 
+              loan l ON l.loan_number = b.loan_number
+          WHERE 
+              cb.employee_id = $1;
+
+                
+              `,
+      [req.params.id]
+    );
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
 module.exports = router;

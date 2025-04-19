@@ -8,20 +8,35 @@ import { FaEye, FaEyeSlash } from 'react-icons/fa';
 const UDashboard = () => {
   const { user } = useAuth();
   const [account, setAccount] = useState(null);
-  const [accountType, setAccountType] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [isBalanceVisible, setIsBalanceVisible] = useState(false);
   const [depositAmount, setDepositAmount] = useState('');
   const [withdrawAmount, setWithdrawAmount] = useState('');
-  const [depositMessage, setDepositMessage] = useState(''); 
-  const [withdrawMessage, setWithdrawMessage] = useState(''); 
+  const [depositMessage, setDepositMessage] = useState('');
+  const [withdrawMessage, setWithdrawMessage] = useState('');
+  const [loanStatus, setLoanStatus] = useState(null);
+
   const navigate = useNavigate();
 
   useEffect(() => {
     if (user?.customer_id) {
       fetchAccount();
+      fetchLoanStatus();
     }
   }, [user]);
+
+  const fetchLoanStatus = async () => {
+    try {
+      const res = await axios.get(`http://localhost:5000/loan/status/${user.customer_id}`);
+      
+      if (res.data && res.data.length > 0) {
+        const latestLoan = res.data[res.data.length - 1];
+        setLoanStatus(latestLoan.status);
+      }
+    } catch (err) {
+      console.error('Failed to fetch loan status:', err);
+    }
+  };
 
   const fetchAccount = async () => {
     setIsLoading(true);
@@ -50,17 +65,11 @@ const UDashboard = () => {
   };
 
   const createAccount = async () => {
-    if (!accountType) {
-      alert('Please select an account type.');
-      return;
-    }
-
     try {
       await axios.post('http://localhost:5000/account/', {
-        customer_id: user.customer_id,
-        account_type: accountType,
+        customer_id: user.customer_id
       });
-      alert('Account created successfully!');
+      alert('Savings Account created successfully!');
       fetchAccount();
     } catch (err) {
       console.error('Failed to create account:', err);
@@ -139,6 +148,13 @@ const UDashboard = () => {
         Hello, {user?.customer_name || 'Guest'}!
       </motion.h1>
 
+      {loanStatus === 'pending' && (
+        <div className=" p-4 my-4" role="alert">
+          <p className="font-bold text-2xl text-blue-500">Loan Request Pending</p>
+          <p className='text-xl'>Your loan application is under review. We'll notify you once it's approved.</p>
+        </div>
+      )}
+
       {isLoading ? (
         <div className="flex justify-center items-center">
           <p className="text-xl">Loading account details...</p>
@@ -147,44 +163,36 @@ const UDashboard = () => {
         !account ? (
           <div className="mt-8 p-3">
             <p className="text-xl mb-7">You don't have an account yet.</p>
-            <div className="flex flex-row gap-4 justify-center items-center">
-              <div className="bg-white p-6 rounded-md shadow-md w-2/6 bg-white/30 bg-opacity-50">
-                <label className="block mb-2 text-xl">Choose your account type to create an account instantly!</label>
-                <select
-                  value={accountType}
-                  onChange={(e) => setAccountType(e.target.value)}
-                  className="w-full p-2 border border-gray-300 rounded-md"
-                >
-                  <option value="">-- Select Type --</option>
-                  <option value="savings">Savings</option>
-                  <option value="checking">Checking</option>
-                </select>
+            {!loanStatus || loanStatus !== 'pending' ? (
+              <div className="flex flex-row gap-4 justify-center items-center">
+                <div className="bg-white p-6 rounded-md shadow-md w-2/6 bg-white/30 bg-opacity-50">
+                  <label className="block mb-5 text-2xl">Create a savings account instantly!</label>
+                  <button
+                    onClick={createAccount}
+                    className="w-full text-lg bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700"
+                  >
+                    Create Savings Account
+                  </button>
+                </div>
 
-                <button
-                  onClick={createAccount}
-                  className="mt-4 w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700"
-                >
-                  Create Account
-                </button>
+                <span className="text-xl font-semibold">OR</span>
+
+                <div className="bg-white p-6 rounded-md shadow-md w-2/6 bg-white/30 bg-opacity-50">
+                  <label className="block mb-5 text-2xl">Tap here to get a loan in seconds!</label>
+                  <button
+                    onClick={goToLoanPage}
+                    className="w-full text-lg bg-green-600 text-white py-2 rounded-md hover:bg-green-700"
+                  >
+                    Apply for Loan
+                  </button>
+                </div>
               </div>
-
-              <span className="text-xl font-semibold">OR</span>
-
-              <div className="bg-white p-6 rounded-md shadow-md w-1/4 bg-white/30 bg-opacity-50">
-                <label className="block mb-2 text-xl">Tap here to get a loan in seconds!</label>
-                <button
-                  onClick={goToLoanPage}
-                  className="w-full bg-green-600 text-white py-2 rounded-md hover:bg-green-700"
-                >
-                  Apply for Loan
-                </button>
-              </div>
-            </div>
+            ) : null}
           </div>
         ) : (
-          <div className="flex justify-center items-center pt-14 gap-5">
-            <div className="bg-white shadow-md rounded-xl p-12 my-3 max-w-md w-1/4 h-auto text-2xl mr-5">
-              <p className="flex items-center justify-between">
+          <div className="flex justify-center items-center pt-14  gap-5">
+            <div className="bg-white shadow-md rounded-xl p-6 py-16 my-4 max-w-md w-1/4 h-auto text-2xl mr-5">
+              <p className="flex items-center justify-between mb-4">
                 <span>
                   <strong>Account Number:</strong> {account.account_number}
                 </span>
@@ -200,11 +208,7 @@ const UDashboard = () => {
                   </button>
                 </span>
               </p>
-              <p className="flex items-center justify-between mt-2">
-                <span>
-                  <strong>Account Type:</strong> {account.account_type}
-                </span>
-              </p>
+              
             </div>
 
             {/* Deposit Section */}
@@ -250,7 +254,6 @@ const UDashboard = () => {
               </div>
               {withdrawMessage && <p className="mt-4 text-xl">{withdrawMessage}</p>}
             </div>
-        
           </div>
         )
       )}

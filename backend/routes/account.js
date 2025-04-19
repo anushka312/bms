@@ -18,7 +18,7 @@ router.get('/customer/:id', async (req, res) => {
   const customer_id = req.params.id;
 
   const result = await db.query(
-    `SELECT a.account_number, a.balance, cb.type
+    `SELECT a.account_number, a.balance
      FROM account a
      JOIN depositor d ON a.account_number = d.account_number
      LEFT JOIN cust_banker cb ON cb.customer_id = d.customer_id
@@ -39,8 +39,7 @@ router.get('/customer/:id', async (req, res) => {
 // POST /customer
 router.post('/', async (req, res) => {
   const {
-    customer_id,
-    account_type    // 'savings' or 'checking'
+    customer_id
   } = req.body;
 
   const client = await db.connect();
@@ -104,22 +103,9 @@ router.post('/', async (req, res) => {
 
     // 7. Assign random banker
     await client.query(
-      `INSERT INTO cust_banker (customer_id, employee_id, type) VALUES ($1, $2, $3)`,
-      [customer_id, employee_id, account_type]
+      `INSERT INTO cust_banker (customer_id, employee_id) VALUES ($1, $2)`,
+      [customer_id, employee_id]
     );
-
-    // 8. Add to account type table based on account type
-    if (account_type === 'savings') {
-      await client.query(
-        `INSERT INTO savings_account (account_number, interest_rate) VALUES ($1, $2)`,
-        [account_number, 3.5] // Savings account interest rate
-      );
-    } else if (account_type === 'checking') {
-      await client.query(
-        `INSERT INTO checking_account (account_number, overdraft_amount) VALUES ($1, $2)`,
-        [account_number, 1000] // Checking account overdraft limit
-      );
-    }
 
     await client.query('COMMIT');
 
