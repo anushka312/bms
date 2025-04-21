@@ -104,7 +104,7 @@ const UDashboard = () => {
     }
 
     try {
-      if (withdrawAmount > account.balance) {
+      if (parseFloat(withdrawAmount) > account.balance) {
         setWithdrawMessage('Not enough balance in account!');
         return;
       }

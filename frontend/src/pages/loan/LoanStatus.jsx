@@ -36,7 +36,7 @@ const LoanStatus = () => {
         }
     };
 
-    // Handle payment submission
+    // Handle Payment action
     const handlePayment = async (paymentNumber, paymentAmount) => {
         setPaymentMessage('');
         setPaymentError('');
@@ -56,6 +56,7 @@ const LoanStatus = () => {
             setNotification({ message: 'Error processing payment!', type: 'error' });
         }
     };
+    
 
     // Effect for checking loan status and fetching details if needed
     useEffect(() => {
@@ -70,7 +71,7 @@ const LoanStatus = () => {
         }
     }, [hasLoan]);
 
-    // Function to validate and format loan start date
+    // Function to format loan start date
     const formatDate = (date) => {
         const parsedDate = Date.parse(date);
         if (isNaN(parsedDate)) {
@@ -81,10 +82,6 @@ const LoanStatus = () => {
 
     if (isLoading) return <p className="text-center text-2xl">Loading loan details...</p>;
     if (!hasLoan) return <p className="text-center text-2xl text-red-600">No loan found for this customer.</p>;
-
-    if (!loanDetails.length) {
-        return <p className="text-center text-2xl">Loading loan details...</p>;
-    }
 
     // Determine the loan status color
     const getLoanStatusColor = (status) => {
@@ -117,7 +114,9 @@ const LoanStatus = () => {
 
             {/* Loan Status Message */}
             {loanStatus === 'pending' && (
-                <p className="text-xl text-yellow-600 text-center mb-6">Your loan is pending approval.</p>
+                <p className="text-xl text-yellow-600 text-center mb-6">
+                    Your loan request is under review.
+                </p>
             )}
 
             {loanStatus === 'rejected' && (
@@ -192,3 +191,4 @@ const LoanStatus = () => {
 };
 
 export default LoanStatus;
+ 
