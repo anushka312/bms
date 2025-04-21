@@ -16,7 +16,7 @@ router.get('/', async (req, res) => {
 });
 
 // Get assigned employee info for a customer
-router.get('/:customer_id', async (req, res) => {
+router.get('/customer/:customer_id', async (req, res) => {
   const { customer_id } = req.params;
 
   try {
@@ -193,9 +193,10 @@ router.get('/user_details/:id', async (req, res) => {
 router.get('/:id', async (req, res) => {
   try {
     const result = await db.query(
-      'SELECT employee_id, employee_name, telephone_number, start_date, email FROM employee WHERE employee_id = $1',
+      'SELECT employee_id, employee_name, telephone_number, start_date, email, branch_name FROM employee WHERE employee_id = $1',
       [req.params.id]
     );
+    
     if (result.rows.length === 0) {
       return res.status(404).json({ message: 'Employee not found' });
     }

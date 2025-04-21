@@ -15,6 +15,8 @@ import AdminLayout from './components/AdminLayout';
 import { AuthProvider } from './context/AuthContext';  // User Context
 import { AdminAuthProvider } from './context/AdminAuthContext';  // Admin Context
 import Home from './pages/Home';
+import AProfile from './pages/dashboard/AProfile';
+import LoanStatus from './pages/loan/LoanStatus';
 import About from './pages/About';
 import Loan from './pages/loan/Loan';
 import Services from './pages/Services';
@@ -42,11 +44,13 @@ const App = () => {
             <Route path="/transactions" element={<Layout><Transactions /></Layout>} />
             <Route path="/profile" element={<Layout><Profile /></Layout>} />
             <Route path="/loan" element={<Layout><Loan /></Layout>} />
+            <Route path="/loanstatus" element={<Layout><LoanStatus /></Layout>} />
 
             {/* Admin Routes (wrapped in AdminLayout) */}
             <Route path="/ahome" element={<AdminLayout><ADashboard /></AdminLayout>} />
             <Route path="/users" element={<AdminLayout><Users /></AdminLayout>} />
             <Route path="/user/:id" element={<AdminLayout><UserDetail /></AdminLayout>} />
+            <Route path="/aprofile" element={<AdminLayout><AProfile /></AdminLayout>} />
           </Routes>
         </AdminAuthProvider>
       </AuthProvider>

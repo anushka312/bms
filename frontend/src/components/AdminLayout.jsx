@@ -51,21 +51,14 @@ const AdminLayout = ({ children }) => {
                 Users
               </NavLink>
               <NavLink
-                to="/admin/loans"
+                to="/aprofile"
                 className={({ isActive }) =>
                   `p-2 rounded-lg transition ${isActive ? 'bg-white/50 font-bold' : 'hover:bg-white/40'}`
                 }
               >
-                Loans
+                Profile
               </NavLink>
-              <NavLink
-                to="/admin/transactions"
-                className={({ isActive }) =>
-                  `p-2 rounded-lg transition ${isActive ? 'bg-white/50 font-bold' : 'hover:bg-white/40'}`
-                }
-              >
-                Transactions
-              </NavLink>
+              
               <button
                 onClick={handleLogout}
                 className="p-2 rounded-lg hover:bg-white/40 transition text-left text-red-500"

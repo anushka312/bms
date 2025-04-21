@@ -14,29 +14,17 @@ const UDashboard = () => {
   const [withdrawAmount, setWithdrawAmount] = useState('');
   const [depositMessage, setDepositMessage] = useState('');
   const [withdrawMessage, setWithdrawMessage] = useState('');
-  const [loanStatus, setLoanStatus] = useState(null);
+  const [receiverAccount, setReceiverAccount] = useState('');
+  const [transferAmount, setTransferAmount] = useState('');
+  const [transferMessage, setTransferMessage] = useState('');
 
   const navigate = useNavigate();
 
   useEffect(() => {
     if (user?.customer_id) {
       fetchAccount();
-      fetchLoanStatus();
     }
   }, [user]);
-
-  const fetchLoanStatus = async () => {
-    try {
-      const res = await axios.get(`http://localhost:5000/loan/status/${user.customer_id}`);
-      
-      if (res.data && res.data.length > 0) {
-        const latestLoan = res.data[res.data.length - 1];
-        setLoanStatus(latestLoan.status);
-      }
-    } catch (err) {
-      console.error('Failed to fetch loan status:', err);
-    }
-  };
 
   const fetchAccount = async () => {
     setIsLoading(true);
@@ -137,6 +125,40 @@ const UDashboard = () => {
     }
   };
 
+  const handleSendMoney = async () => {
+    setTransferMessage('');
+    if (!receiverAccount || !transferAmount || transferAmount <= 0) {
+      setTransferMessage('Please fill all fields with valid values.');
+      return;
+    }
+
+    if (receiverAccount === account.account_number) {
+      setTransferMessage("You can't send money to your own account.");
+      return;
+    }
+
+    if (parseFloat(transferAmount) > account.balance) {
+      setTransferMessage('Insufficient balance.');
+      return;
+    }
+
+    try {
+      await axios.post('http://localhost:5000/transaction/', {
+        sender_account: parseInt(account.account_number),
+        receiver_account: parseInt(receiverAccount),
+        amount: parseFloat(transferAmount)
+      });
+
+      setTransferMessage('Transfer successful!');
+      setReceiverAccount('');
+      setTransferAmount('');
+      fetchAccount();
+    } catch (err) {
+      console.error('Error sending money:', err);
+      setTransferMessage('Transfer failed.');
+    }
+  };
+
   return (
     <div className="p-4">
       <motion.h1
@@ -148,13 +170,6 @@ const UDashboard = () => {
         Hello, {user?.customer_name || 'Guest'}!
       </motion.h1>
 
-      {loanStatus === 'pending' && (
-        <div className=" p-4 my-4" role="alert">
-          <p className="font-bold text-2xl text-blue-500">Loan Request Pending</p>
-          <p className='text-xl'>Your loan application is under review. We'll notify you once it's approved.</p>
-        </div>
-      )}
-
       {isLoading ? (
         <div className="flex justify-center items-center">
           <p className="text-xl">Loading account details...</p>
@@ -163,96 +178,128 @@ const UDashboard = () => {
         !account ? (
           <div className="mt-8 p-3">
             <p className="text-xl mb-7">You don't have an account yet.</p>
-            {!loanStatus || loanStatus !== 'pending' ? (
-              <div className="flex flex-row gap-4 justify-center items-center">
-                <div className="bg-white p-6 rounded-md shadow-md w-2/6 bg-white/30 bg-opacity-50">
-                  <label className="block mb-5 text-2xl">Create a savings account instantly!</label>
-                  <button
-                    onClick={createAccount}
-                    className="w-full text-lg bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700"
-                  >
-                    Create Savings Account
-                  </button>
-                </div>
-
-                <span className="text-xl font-semibold">OR</span>
-
-                <div className="bg-white p-6 rounded-md shadow-md w-2/6 bg-white/30 bg-opacity-50">
-                  <label className="block mb-5 text-2xl">Tap here to get a loan in seconds!</label>
-                  <button
-                    onClick={goToLoanPage}
-                    className="w-full text-lg bg-green-600 text-white py-2 rounded-md hover:bg-green-700"
-                  >
-                    Apply for Loan
-                  </button>
-                </div>
+            <div className="flex flex-row gap-4 justify-center items-center">
+              <div className="bg-white p-6 rounded-md shadow-md w-2/6 bg-white/30 bg-opacity-50">
+                <label className="block mb-5 text-2xl">Create a savings account instantly!</label>
+                <button
+                  onClick={createAccount}
+                  className="w-full text-lg bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700"
+                >
+                  Create Savings Account
+                </button>
               </div>
-            ) : null}
+
+              <span className="text-xl font-semibold">OR</span>
+
+              <div className="bg-white p-6 rounded-md shadow-md w-2/6 bg-white/30 bg-opacity-50">
+                <label className="block mb-5 text-2xl">Tap here to get a loan in seconds!</label>
+                <button
+                  onClick={goToLoanPage}
+                  className="w-full text-lg bg-green-600 text-white py-2 rounded-md hover:bg-green-700"
+                >
+                  Apply for Loan
+                </button>
+              </div>
+            </div>
           </div>
         ) : (
-          <div className="flex justify-center items-center pt-14  gap-5">
-            <div className="bg-white shadow-md rounded-xl p-6 py-16 my-4 max-w-md w-1/4 h-auto text-2xl mr-5">
-              <p className="flex items-center justify-between mb-4">
-                <span>
-                  <strong>Account Number:</strong> {account.account_number}
-                </span>
-              </p>
-              <p className="flex items-center justify-between mt-2">
-                <span>
-                  <strong>Balance:</strong> ₹ {isBalanceVisible ? account.balance : '••••••'}
+          <div className="flex flex-col gap-5">
+            {/* Upper Row - Account Info and Send Money */}
+            <div className="flex flex-row justify-center gap-5">
+              {/* Account Info */}
+              <div className="bg-white shadow-md rounded-xl p-6 py-16 my-4 max-w-md w-1/2 text-2xl">
+                <h1 className='font-bold text-3xl mb-4'>Account Info</h1>
+                <p className="flex items-center justify-between mb-4">
+                  <span>Account Number: {account.account_number}</span>
+                </p>
+                <p className="flex items-center justify-between mt-2">
+                  <span>
+                    <span> Balance: ₹ {isBalanceVisible ? account.balance : '••••••'} </span>
+                    <button
+                      onClick={toggleBalanceVisibility}
+                      className="ml-2"
+                    >
+                      {isBalanceVisible ? <FaEyeSlash /> : <FaEye />}
+                    </button>
+                  </span>
+                </p>
+              </div>
+
+              {/* Send Money */}
+              <div className="bg-white shadow-md rounded-xl p-6 my-4 max-w-md w-1/2 text-xl">
+                <h2 className="text-2xl mb-4">Send Money</h2>
+                <div className="flex flex-col">
+                  <input
+                    type="text"
+                    value={receiverAccount}
+                    onChange={(e) => setReceiverAccount(e.target.value)}
+                    placeholder="Receiver's account number"
+                    className="mb-4 p-2 border border-gray-300 rounded-md"
+                  />
+                  <input
+                    type="number"
+                    value={transferAmount}
+                    onChange={(e) => setTransferAmount(e.target.value)}
+                    placeholder="Amount to send"
+                    className="mb-4 p-2 border border-gray-300 rounded-md"
+                    min="1"
+                  />
                   <button
-                    onClick={toggleBalanceVisibility}
-                    className="ml-2"
+                    onClick={handleSendMoney}
+                    className="w-full bg-green-600 text-white py-2 rounded-md hover:bg-green-700"
                   >
-                    {isBalanceVisible ? <FaEyeSlash /> : <FaEye />}
+                    Send Money
                   </button>
-                </span>
-              </p>
-              
+                </div>
+                {transferMessage && <p className="mt-4 text-xl">{transferMessage}</p>}
+              </div>
             </div>
 
-            {/* Deposit Section */}
-            <div className="bg-white shadow-md rounded-xl p-6 my-4 max-w-md w-1/4 text-xl mr-5">
-              <h2 className="text-2xl mb-4">Deposit Money</h2>
-              <div className="flex flex-col">
-                <input
-                  type="number"
-                  value={depositAmount}
-                  onChange={(e) => setDepositAmount(e.target.value)}
-                  placeholder="Enter amount to deposit"
-                  className="mb-4 p-2 border border-gray-300 rounded-md"
-                  min="1"
-                />
-                <button
-                  onClick={handleDeposit}
-                  className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700"
-                >
-                  Deposit
-                </button>
+            {/* Bottom Row - Deposit and Withdraw */}
+            <div className="flex flex-row justify-center gap-5">
+              {/* Deposit */}
+              <div className="bg-white shadow-md rounded-xl p-6 my-4 max-w-md w-1/2 text-xl">
+                <h2 className="text-2xl mb-4">Deposit Money</h2>
+                <div className="flex flex-col">
+                  <input
+                    type="number"
+                    value={depositAmount}
+                    onChange={(e) => setDepositAmount(e.target.value)}
+                    placeholder="Enter amount to deposit"
+                    className="mb-4 p-2 border border-gray-300 rounded-md"
+                    min="1"
+                  />
+                  <button
+                    onClick={handleDeposit}
+                    className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700"
+                  >
+                    Deposit
+                  </button>
+                </div>
+                {depositMessage && <p className="mt-4 text-xl">{depositMessage}</p>}
               </div>
-              {depositMessage && <p className="mt-4 text-xl">{depositMessage}</p>}
-            </div>
 
-            {/* Withdrawal section */}
-            <div className="bg-white shadow-md rounded-xl p-6 my-4 max-w-md w-1/4 mr-5 text-xl">
-              <h2 className="text-2xl mb-4">Withdraw Money</h2>
-              <div className="flex flex-col">
-                <input
-                  type="number"
-                  value={withdrawAmount}
-                  onChange={(e) => setWithdrawAmount(e.target.value)}
-                  placeholder="Enter amount to withdraw"
-                  className="mb-4 p-2 border border-gray-300 rounded-md"
-                  min="1"
-                />
-                <button
-                  onClick={handleWithdraw}
-                  className="w-full bg-red-600 text-white py-2 rounded-md hover:bg-red-700"
-                >
-                  Withdraw
-                </button>
+              {/* Withdraw */}
+              <div className="bg-white shadow-md rounded-xl p-6 my-4 max-w-md w-1/2 text-xl">
+                <h2 className="text-2xl mb-4">Withdraw Money</h2>
+                <div className="flex flex-col">
+                  <input
+                    type="number"
+                    value={withdrawAmount}
+                    onChange={(e) => setWithdrawAmount(e.target.value)}
+                    placeholder="Enter amount to withdraw"
+                    className="mb-4 p-2 border border-gray-300 rounded-md"
+                    min="1"
+                  />
+                  <button
+                    onClick={handleWithdraw}
+                    className="w-full bg-red-600 text-white py-2 rounded-md hover:bg-red-700"
+                  >
+                    Withdraw
+                  </button>
+                </div>
+                {withdrawMessage && <p className="mt-4 text-xl">{withdrawMessage}</p>}
               </div>
-              {withdrawMessage && <p className="mt-4 text-xl">{withdrawMessage}</p>}
             </div>
           </div>
         )

@@ -38,7 +38,7 @@ const Profile = () => {
 
     const fetchEmployeeInfo = async () => {
       try {
-        const res = await axios.get(`http://localhost:5000/employee/${customer_id}`);
+        const res = await axios.get(`http://localhost:5000/employee/customer/${customer_id}`);
         setEmployeeInfo(res.data);
       } catch (err) {
         console.warn("No employee assigned or fetch failed:", err);

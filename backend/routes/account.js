@@ -167,14 +167,85 @@ router.put('/:id', async (req, res) => {
 });
 
 
-// Delete an account
+// Delete an account and related records
+// Delete an account and all related records including the customer
 router.delete('/:id', async (req, res) => {
+  const account_number = req.params.id;
+  const client = await db.connect();
+
   try {
-    await db.query('DELETE FROM account WHERE account_number = $1', [req.params.id]);
-    res.json({ message: 'Account deleted' });
+    await client.query('BEGIN');
+
+    // 1. Get the customer_id from depositor table
+    const depositorRes = await client.query(
+      'SELECT customer_id FROM depositor WHERE account_number = $1',
+      [account_number]
+    );
+
+    if (depositorRes.rows.length === 0) {
+      throw new Error('No depositor found for this account');
+    }
+
+    const customer_id = depositorRes.rows[0].customer_id;
+
+    // 2. Delete from cust_banker
+    await client.query(
+      'DELETE FROM cust_banker WHERE customer_id = $1',
+      [customer_id]
+    );
+
+    // 3. Delete from depositor
+    await client.query(
+      'DELETE FROM depositor WHERE account_number = $1',
+      [account_number]
+    );
+
+    // 4. Delete from account_branch
+    await client.query(
+      'DELETE FROM account_branch WHERE account_number = $1',
+      [account_number]
+    );
+
+    // 5. Delete transactions (optional)
+    await client.query(
+      'DELETE FROM transaction_history WHERE sender_account = $1 OR receiver_account = $1',
+      [account_number]
+    );
+
+    // 6. Delete the account
+    await client.query(
+      'DELETE FROM account WHERE account_number = $1',
+      [account_number]
+    );
+
+    // 7. Now check if this customer has any other accounts
+    const otherAccounts = await client.query(
+      'SELECT * FROM depositor WHERE customer_id = $1',
+      [customer_id]
+    );
+
+    if (otherAccounts.rows.length === 0) {
+      // 8. Delete the customer (only if no other accounts)
+      await client.query(
+        'DELETE FROM customer WHERE customer_id = $1',
+        [customer_id]
+      );
+    }
+
+    await client.query('COMMIT');
+
+    res.json({
+      message: 'Account and related records (including customer if applicable) deleted successfully'
+    });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    await client.query('ROLLBACK');
+    console.error('Error during deletion:', err);
+    res.status(500).json({ message: err.message || 'Deletion failed' });
+  } finally {
+    client.release();
   }
 });
+
+
 
 module.exports = router;

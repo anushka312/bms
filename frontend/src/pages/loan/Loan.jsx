@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import loan from '/src/assets/loan.jpg';
 import { useAuth } from '../../context/AuthContext'; // Importing the context
 import { useNavigate } from 'react-router-dom';
 
@@ -55,17 +54,14 @@ const Loan = () => {
             fetch(`http://localhost:5000/customer/${user.customer_id}`)
                 .then(res => res.json())
                 .then(data => {
-                    setBranchName(data.customer_city);  // Yeh important hai!
+                    setBranchName(data.customer_city);  
                 });
         }
     }, [user]);
 
     return (
-        <div
-            className="bg-cover flex items-center justify-center"
-            style={{ backgroundImage: `url(${loan})` }}
-        >
-            <div className=" p-10 my-24 bg-white/50 bg-opacity-60 rounded-xl shadow-md ">
+        <div className="flex justify-center items-center min-h-screen p-4">
+            <div className=" p-10 my-12 bg-white/50 bg-opacity-60 rounded-xl shadow-md w-1/3">
                 <p className="text-5xl text-center mb-3 font-semibold">Apply for Loan</p>
                 <p className="text-md text-gray-500 text-center mb-6">A mail will be sent to your registered email after approval.</p>
                 <form onSubmit={handleSubmit} className="space-y-6">

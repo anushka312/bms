@@ -24,7 +24,11 @@ router.get('/', async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 });
-
+const generateTransactionId = () => {
+  const timestamp = Date.now().toString();
+  const randomStr = Math.random().toString(36).substring(2, 8).toUpperCase();
+  return `TXN${timestamp}${randomStr}`;
+};
 // Get transactions for a customer by ID
 router.get('/customer/:customer_id', async (req, res) => {
   const { customer_id } = req.params;
@@ -95,12 +99,14 @@ router.post('/', async (req, res) => {
       'UPDATE account SET balance = balance + $1 WHERE account_number = $2',
       [amount, receiver_account]
     );
-
+    const transactionId = generateTransactionId();
     // Record in transaction history
-    await client.query(
-      `INSERT INTO transaction_history (sender_account, receiver_account, amount)
-       VALUES ($1, $2, $3)`,
-      [sender_account, receiver_account, amount]
+    
+    await db.query(
+      `INSERT INTO transaction_history 
+       (transaction_id, sender_account, receiver_account, amount, timestamp)
+       VALUES ($1, $2, $3, $4, NOW())`,
+      [transactionId, sender_account, receiver_account, amount]
     );
 
     await client.query('COMMIT');

@@ -2,12 +2,15 @@ import React, { useState } from 'react';
 import { Menu, X } from 'lucide-react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import useLoanStatus from '../../../backend/routes/useLoanStatus'
 import dashboard from '../assets/dashboard.jpg';
 
 const Layout = ({ children }) => {
-  const [sidebarOpen, setSidebarOpen] = useState(false); 
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+
+  const hasLoan = useLoanStatus(user?.customer_id); 
 
   const handleLogout = () => {
     logout();
@@ -58,6 +61,25 @@ const Layout = ({ children }) => {
               >
                 Profile
               </NavLink>
+              {hasLoan ? (
+                <NavLink
+                  to="/loanstatus"
+                  className={({ isActive }) =>
+                    `p-2 rounded-lg transition ${isActive ? 'bg-white/50 font-bold' : 'hover:bg-white/40'}`
+                  }
+                >
+                  Loan Status
+                </NavLink>
+              ) : (
+                <NavLink
+                  to="/loan"
+                  className={({ isActive }) =>
+                    `p-2 rounded-lg transition ${isActive ? 'bg-white/50 font-bold' : 'hover:bg-white/40'}`
+                  }
+                >
+                  Apply for Loan
+                </NavLink>
+              )}
               <button
                 onClick={handleLogout}
                 className="p-2 rounded-lg hover:bg-white/40 transition text-left text-red-500"
@@ -69,7 +91,6 @@ const Layout = ({ children }) => {
         </aside>
       )}
 
-      {/* Menu Button (Only visible when the sidebar is closed) */}
       {!sidebarOpen && (
         <button
           className="fixed top-4 left-4 z-50 bg-transparent p-2 hover:bg-gray-100 transition"
@@ -79,11 +100,8 @@ const Layout = ({ children }) => {
         </button>
       )}
 
-      {/* Main Content */}
       <main
-        className={`flex-1 mt-20 p-4 transition-all duration-300 ${
-          sidebarOpen ? 'md:ml-64' : ''
-        }`}
+        className={`flex-1 mt-20 p-4 transition-all duration-300 ${sidebarOpen ? 'md:ml-64' : ''}`}
       >
         {children}
       </main>
