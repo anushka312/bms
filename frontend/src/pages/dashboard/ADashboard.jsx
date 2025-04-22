@@ -38,7 +38,7 @@ const ADashboard = () => {
 
       // Total accounts
       const accountsRes = await axios.get(`http://localhost:5000/other/${employee.employee_id}/accounts`);
-      const totalAccounts = parseInt(accountsRes.data.total, 10) || 0;
+      const totalAccounts = parseInt(accountsRes.data[0]?.totalaccounts, 10) || 0;
 
       // Total loans
       const loansRes = await axios.get(`http://localhost:5000/other/${employee.employee_id}/loans`);
