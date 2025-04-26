@@ -137,17 +137,33 @@ const UDashboard = () => {
       return;
     }
 
-    if (parseFloat(transferAmount) > account.balance) {
+    const amount = parseFloat(transferAmount);
+    if (amount > account.balance) {
       setTransferMessage('Insufficient balance.');
       return;
     }
 
     try {
-      await axios.post('http://localhost:5000/transaction/', {
-        sender_account: parseInt(account.account_number),
-        receiver_account: parseInt(receiverAccount),
-        amount: parseFloat(transferAmount)
+      // 1. Subtract from sender
+      await axios.put(`http://localhost:5000/account/${account.account_number}`, {
+        balance: account.balance - amount,
+        amount: -amount, // negative amount for sender
+        receiver_account: parseInt(receiverAccount)
       });
+
+      // 2. Add to receiver
+      await axios.put(`http://localhost:5000/account/${receiverAccount}`, {
+        balance: null, // assume backend recalculates balance
+        amount: amount, // positive amount for receiver
+        receiver_account: parseInt(receiverAccount)
+      });
+
+      // OR (if backend does both in one transaction)
+      // await axios.post('http://localhost:5000/transaction/', {
+      //   sender_account: parseInt(account.account_number),
+      //   receiver_account: parseInt(receiverAccount),
+      //   amount: amount // backend should apply -amount to sender and +amount to receiver
+      // });
 
       setTransferMessage('Transfer successful!');
       setReceiverAccount('');

@@ -148,7 +148,7 @@ router.get('/user_details/:id', async (req, res) => {
     if (loanRes.rowCount > 0) {
       const loanNumber = loanRes.rows[0].loan_number;
       const paymentRes = await db.query(
-        `SELECT payment_number, payment_date, payment_amount, payment_status, payment_made, due_date
+        `SELECT payment_number, payment_amount, payment_status, payment_made, due_date
          FROM payment
          WHERE loan_number = $1`,
         [loanNumber]

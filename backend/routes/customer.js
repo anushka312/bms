@@ -165,10 +165,10 @@ router.delete('/:id', async (req, res) => {
     const accountNumbers = accRes.rows.map(row => row.account_number);
 
     // Delete from savings_account & checking_account
-    for (const accNum of accountNumbers) {
-      await client.query(`DELETE FROM savings_account WHERE account_number = $1`, [accNum]);
-      await client.query(`DELETE FROM checking_account WHERE account_number = $1`, [accNum]);
-    }
+    // for (const accNum of accountNumbers) {
+    //   await client.query(`DELETE FROM savings_account WHERE account_number = $1`, [accNum]);
+    //   await client.query(`DELETE FROM checking_account WHERE account_number = $1`, [accNum]);
+    // }
 
     // Delete from transaction_history
     for (const accNum of accountNumbers) {

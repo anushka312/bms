@@ -140,18 +140,6 @@ const UserDetail = () => {
                       </tr>
                     ))}
 
-
-                  {/* Render Paid Payments Below */}
-                  {paidPayments.map((p, i) => (
-                    <tr key={i} className="hover:bg-gray-50">
-                      <td className="px-4 py-2 border-b">{p.payment_number}</td>
-                      <td className="px-4 py-2 border-b">₹{p.payment_amount}</td>
-                      <td className="px-4 py-2 border-b">{formatDate(p.due_date)}</td>
-                      <td className={`px-4 py-2 border-b font-semibold text-green-600`}>
-                        {p.payment_status}
-                      </td>
-                    </tr>
-                  ))}
                 </tbody>
               </table>
             </div>
@@ -252,7 +240,7 @@ const UserDetail = () => {
                         <td className="px-4 py-2 border-b">{t.sender_account}</td>
                         <td className="px-4 py-2 border-b">{t.receiver_account}</td>
                         <td className="px-4 py-2 border-b">₹{t.amount}</td>
-                        <td className="px-4 py-2 border-b">{formatDate(t.transaction_date)}</td>
+                        <td className="px-4 py-2 border-b">{formatDate(t.timestamp)}</td>
                       </tr>
                     );
                   })}

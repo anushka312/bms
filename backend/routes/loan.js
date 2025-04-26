@@ -76,8 +76,8 @@ const generateEMI = async (loanNumber, amount, months) => {
 
     // Insert the payment details into the database
     await db.query(
-      `INSERT INTO payment (loan_number, payment_number, payment_date, payment_amount, payment_status, payment_made, due_date)
-       VALUES ($1, $2, CURRENT_DATE, $3, 'pending', $4, $5)`,
+      `INSERT INTO payment (loan_number, payment_number, payment_amount, payment_status, payment_made, due_date)
+       VALUES ($1, $2, $3, 'pending', $4, $5)`,
       [loanNumber, i, emiAmount, null, dueDate]
     );
   }
